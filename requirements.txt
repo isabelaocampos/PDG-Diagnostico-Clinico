@@ -1,0 +1,52 @@
+# ============================================================
+#  requirements.txt  —  Proyecto RAD-ALERT
+#  Python 3.12
+#  Instalación: pip install -r requirements.txt
+# ============================================================
+
+# --- Core científico ---
+numpy
+pandas
+scipy
+
+# --- Visualización ---
+matplotlib
+seaborn
+plotly
+
+# --- Machine Learning ---
+scikit-learn
+imbalanced-learn
+
+# --- Deep Learning ---
+# tensorflow.keras fue separado en Python 3.12+
+# Usar 'keras' standalone + 'tf-keras' como puente de compatibilidad
+tensorflow
+tf-keras
+keras
+
+torch
+torchaudio
+torchvision
+
+# --- NLP / Transformers ---
+transformers==4.46.3
+tokenizers==0.20.3
+Unidecode
+huggingface-hub
+safetensors
+
+# --- XGBoost ---
+xgboost
+
+# --- Análisis exploratorio ---
+missingno
+sweetviz
+ydata-profiling
+openpyxl
+wordcloud
+
+# --- Utilidades de notebooks ---
+python-dotenv
+ipykernel
+notebook
