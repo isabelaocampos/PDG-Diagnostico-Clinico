@@ -1,5 +1,4 @@
-# File: api/main.py
-"""Aplicación principal FastAPI para clasificación radiológica multicategoría TC-DIAG."""
+"""API principal de TC-DIAG — clasificación radiológica de TC de cráneo simple."""
 
 from __future__ import annotations
 
@@ -11,18 +10,23 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from api.classifier import CONFIANZA_MINIMA, classifier
-from api.database import Diagnostico, get_db, guardar_diagnostico, obtener_historial
+from api.classifier import ClasificadorEnCascada, clasificador
+from api.database import Diagnostico, guardar_diagnostico, obtener_historial, obtener_sesion
 from api.notifier import notificar_whatsapp
-from api.schemas import DiagnosticoResponse, HistorialResponse, ProbabilidadesResponse, ReporteRequest
+from api.schemas import ProbabilidadesPorPatologia, RespuestaDiagnostico, RespuestaHistorial, SolicitudReporte
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="TC-DIAG API",
-    description="Diagnóstico multiclase de patologías en TC de cráneo simple",
-    version="1.0.0",
+    description="Sistema de apoyo al diagnóstico en TC de cráneo. Triage con RAD-ALERT y clasificación de patología configurable.",
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 app.add_middleware(
@@ -34,125 +38,130 @@ app.add_middleware(
 )
 
 
-def _convertir_diagnostico(diagnostico: Diagnostico) -> DiagnosticoResponse:
-    """Convierte una fila ORM a la respuesta pública de la API.
-
-    Args:
-        diagnostico: Instancia ORM recuperada de la base de datos.
-
-    Returns:
-        DiagnosticoResponse serializable para FastAPI.
-    """
-    return DiagnosticoResponse(
-        report_id=diagnostico.report_id,
-        status="ok",
-        patologia=diagnostico.patologia,
-        probabilidades=ProbabilidadesResponse(
-            acv=diagnostico.prob_acv or 0.0,
-            hemorragia_intracraneal=diagnostico.prob_hemorragia_intracraneal or 0.0,
-            desviacion_linea_media=diagnostico.prob_desviacion_linea_media or 0.0,
-            fractura_craneal=diagnostico.prob_fractura_craneal or 0.0,
+def _construir_respuesta(registro: Diagnostico) -> RespuestaDiagnostico:
+    """Convierte un registro ORM en la respuesta de la API."""
+    return RespuestaDiagnostico(
+        report_id=registro.report_id,
+        estado="ok",
+        es_critico=registro.es_critico,
+        triage_score=registro.triage_score or 0.0,
+        patologia=registro.patologia,
+        icd10=registro.icd10,
+        probabilidades=ProbabilidadesPorPatologia(
+            acv=registro.prob_acv or 0.0,
+            hemorragia_intracraneal=registro.prob_hemorragia_intracraneal or 0.0,
+            desviacion_linea_media=registro.prob_desviacion_linea_media or 0.0,
+            fractura_craneal=registro.prob_fractura_craneal or 0.0,
         ),
-        confianza=diagnostico.confianza,
-        requiere_revision=diagnostico.requiere_revision,
-        timestamp=diagnostico.timestamp or datetime.now(timezone.utc),
+        confianza=registro.confianza or 0.0,
+        requiere_revision=registro.requiere_revision,
+        marca_temporal=registro.marca_temporal or datetime.now(timezone.utc),
     )
 
 
-@app.post(
-    "/clasificar",
-    response_model=DiagnosticoResponse,
-    tags=["Clasificación"],
-    response_description="Diagnóstico de patología radiológica",
-)
-def clasificar_reporte(reporte: ReporteRequest) -> DiagnosticoResponse:
-    """Clasifica un informe radiológico y persiste el resultado.
+@app.post("/clasificar", response_model=RespuestaDiagnostico, tags=["Clasificacion"])
+def clasificar_reporte(
+    solicitud: SolicitudReporte,
+    sesion: Session = Depends(obtener_sesion),
+) -> RespuestaDiagnostico:
+    """Procesa un informe radiológico: triage con RAD-ALERT y detección de patología si es crítico."""
+    if clasificador is None:
+        raise HTTPException(status_code=503, detail="El clasificador no está disponible.")
 
-    Args:
-        reporte: Solicitud con el contenido clínico del informe.
-
-    Returns:
-        DiagnosticoResponse con predicción, probabilidades y timestamp.
-    """
-    if classifier is None:
-        raise HTTPException(status_code=503, detail="El modelo TC-DIAG no está disponible.")
-
-    db_generator = get_db()
-    db: Session = next(db_generator)
     try:
-        prediccion = classifier.predecir(reporte.hallazgos, reporte.opinion or "")
-        whatsapp_enviado = notificar_whatsapp(reporte.report_id, str(prediccion["patologia"]), float(prediccion["confianza"]))
-        diagnostico_db = guardar_diagnostico(
-            db=db,
-            report_id=reporte.report_id,
-            patologia=str(prediccion["patologia"]),
-            probabilidades=dict(prediccion["probabilidades"]),
-            confianza=float(prediccion["confianza"]),
-            requiere_revision=bool(prediccion["requiere_revision"]),
+        prediccion = clasificador.predecir(solicitud.hallazgos, solicitud.opinion or "")
+
+        whatsapp_enviado = False
+        if prediccion["es_critico"]:
+            whatsapp_enviado = notificar_whatsapp(
+                report_id=solicitud.report_id,
+                patologia=prediccion.get("patologia"),
+                icd10=prediccion.get("icd10"),
+                confianza=prediccion.get("confianza", 0.0),
+            )
+
+        registro = guardar_diagnostico(
+            sesion=sesion,
+            report_id=solicitud.report_id,
+            es_critico=prediccion["es_critico"],
+            triage_score=prediccion.get("triage_score", 0.0),
+            patologia=prediccion.get("patologia"),
+            icd10=prediccion.get("icd10"),
+            probabilidades=prediccion.get("probabilidades", {}),
+            confianza=prediccion.get("confianza", 0.0),
+            requiere_revision=prediccion.get("requiere_revision", False),
             whatsapp_enviado=whatsapp_enviado,
         )
-        return _convertir_diagnostico(diagnostico_db)
+
+        logger.info(
+            "Reporte '%s' — Critico: %s | Patologia: %s | Confianza: %.2f",
+            solicitud.report_id,
+            prediccion["es_critico"],
+            prediccion.get("patologia"),
+            prediccion.get("confianza", 0.0),
+        )
+
+        return _construir_respuesta(registro)
+
     except HTTPException:
         raise
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("Error al clasificar el reporte %s", reporte.report_id)
-        raise HTTPException(status_code=500, detail=f"Error interno al clasificar: {exc}")
-    finally:
-        db_generator.close()
+    except Exception as exc:
+        logger.exception("Error al procesar el reporte '%s'", solicitud.report_id)
+        raise HTTPException(status_code=500, detail=f"Error interno: {exc}")
 
 
 @app.get("/health", tags=["Sistema"])
-def health() -> dict:
-    """Devuelve el estado operacional del servicio.
-
-    Args:
-        No aplica.
-
-    Returns:
-        Diccionario con el estado y metadatos del servicio.
-    """
+def estado_servicio() -> dict:
+    """Retorna el estado operacional del servicio y la disponibilidad de cada modelo."""
     return {
-        "status": "ok",
-        "modelo": "RoBERTa biomédico multiclase",
-        "version": "1.0.0",
-        "timestamp": datetime.now(timezone.utc),
+        "estado": "activo",
+        "version": "2.0.0",
+        "modelos": {
+            "triage": "disponible" if clasificador and clasificador._triage else "no disponible",
+            "patologia": "disponible" if clasificador and clasificador._patologias else "pendiente de entrenamiento",
+        },
+        "marca_temporal": datetime.now(timezone.utc),
     }
 
 
-@app.get("/historial", response_model=HistorialResponse, tags=["Historial"])
-def historial(limit: int = 50, patologia: Optional[str] = None, db: Session = Depends(get_db)) -> HistorialResponse:
-    """Recupera el historial de diagnósticos almacenados.
+@app.get("/historial", response_model=RespuestaHistorial, tags=["Historial"])
+def historial(
+    limite: int = 50,
+    patologia: Optional[str] = None,
+    solo_criticos: Optional[bool] = None,
+    sesion: Session = Depends(obtener_sesion),
+) -> RespuestaHistorial:
+    """Retorna el historial de diagnósticos con filtros opcionales."""
+    registros = obtener_historial(sesion, limite=limite, patologia=patologia, solo_criticos=solo_criticos)
+    return RespuestaHistorial(
+        total=len(registros),
+        diagnosticos=[_construir_respuesta(r) for r in registros],
+    )
 
-    Args:
-        limit: Número máximo de registros a retornar.
-        patologia: Filtro opcional por patología.
-        db: Sesión de base de datos inyectada por FastAPI.
 
-    Returns:
-        HistorialResponse con total y lista de diagnósticos.
-    """
-    diagnosticos = obtener_historial(db, limit=limit, patologia=patologia)
-    return HistorialResponse(total=len(diagnosticos), diagnosticos=[_convertir_diagnostico(item) for item in diagnosticos])
-
-
-@app.get("/historial/{report_id}", response_model=DiagnosticoResponse, tags=["Historial"])
-def historial_por_report_id(report_id: str, db: Session = Depends(get_db)) -> DiagnosticoResponse:
-    """Recupera el diagnóstico más reciente asociado a un report_id.
-
-    Args:
-        report_id: Identificador del reporte a buscar.
-        db: Sesión de base de datos inyectada por FastAPI.
-
-    Returns:
-        DiagnosticoResponse del reporte solicitado.
-    """
-    diagnostico = db.query(Diagnostico).filter(Diagnostico.report_id == report_id).order_by(Diagnostico.timestamp.desc()).first()
-    if diagnostico is None:
-        raise HTTPException(status_code=404, detail="Diagnóstico no encontrado.")
-    return _convertir_diagnostico(diagnostico)
+@app.get("/historial/{report_id}", response_model=RespuestaDiagnostico, tags=["Historial"])
+def historial_por_id(
+    report_id: str,
+    sesion: Session = Depends(obtener_sesion),
+) -> RespuestaDiagnostico:
+    """Retorna el diagnóstico más reciente de un reporte específico."""
+    registro = (
+        sesion.query(Diagnostico)
+        .filter(Diagnostico.report_id == report_id)
+        .order_by(Diagnostico.marca_temporal.desc())
+        .first()
+    )
+    if registro is None:
+        raise HTTPException(status_code=404, detail=f"No se encontró el reporte '{report_id}'.")
+    return _construir_respuesta(registro)
 
 
 @app.on_event("startup")
-def startup_event() -> None:
-    """Registra el arranque correcto de la aplicación."""
-    logger.info("TC-DIAG API iniciada correctamente")
+def _al_iniciar() -> None:
+    triage_ok = clasificador is not None and clasificador._triage is not None
+    patologia_ok = clasificador is not None and clasificador._patologias is not None
+    logger.info(
+        "TC-DIAG v2.0.0 iniciada. Triage: %s | Patologia: %s",
+        "OK" if triage_ok else "NO DISPONIBLE",
+        "OK" if patologia_ok else "PENDIENTE",
+    )
