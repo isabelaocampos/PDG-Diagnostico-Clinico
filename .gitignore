@@ -215,3 +215,6 @@ __marimo__/
 # Ignorar archivos de Excel por seguridad de los datos
 *.xlsx
 *.csv
+
+1b_Augmentation_LLM_claude_v2.ipynb
+1b_Augmentation_LLM_claude.ipynb
