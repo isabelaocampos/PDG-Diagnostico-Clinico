@@ -3,6 +3,7 @@
 *.csv
 *.xls
 data/
+models/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -216,5 +217,3 @@ __marimo__/
 *.xlsx
 *.csv
 
-1b_Augmentation_LLM_claude_v2.ipynb
-1b_Augmentation_LLM_claude.ipynb
