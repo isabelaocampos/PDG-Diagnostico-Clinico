@@ -192,7 +192,7 @@ cython_debug/
 #  that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 #  and can be added to the global gitignore or merged into this file. However, if you prefer, 
 #  you could uncomment the following to ignore the entire vscode folder
-# .vscode/
+.vscode/
 
 # Ruff stuff:
 .ruff_cache/
@@ -218,3 +218,20 @@ __marimo__/
 
 1b_Augmentation_LLM_claude_v2.ipynb
 1b_Augmentation_LLM_claude.ipynb
+
+# Claude AI editor settings
+.claude/
+
+# Modelos entrenados (binarios grandes - usar Git LFS si se necesitan)
+models/
+
+# Requirements de otros proyectos (no pertenece a este repo)
+requirements2.txt
+
+# Scripts temporales de limpieza
+scan_notebooks.py
+clean_notebooks.py
+clean_isabella.py
+fix_inference.py
+fix_isabella_final.py
+fix_cell5.py
