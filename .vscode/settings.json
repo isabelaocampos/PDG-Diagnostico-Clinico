@@ -1,5 +1,0 @@
-{
-    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
-    "jupyter.kernels.filter": [],
-    "python.terminal.activateEnvironment": true
-}
