@@ -102,8 +102,6 @@ PDG-Diagnostico-Clinico/
     └── 7_Modelo_RoBERTa.ipynb
 ```
 
-> Las carpetas `data/` y `models/` no están incluidas por confidencialidad de los datos clínicos.
-
 ---
 
 ## Licencia
