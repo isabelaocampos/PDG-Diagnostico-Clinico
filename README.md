@@ -33,15 +33,15 @@ Ejecutar en orden. Cada notebook es independiente y carga su propio estado desde
 | # | Notebook | Descripción |
 |---|---|---|
 | 0.0 | `0.0_Analisis_y_Transformacion.ipynb` | Exploración, limpieza y normalización del dataset de informes clínicos |
-| 0.1 | `0.1_Inferencia_RAD_ALERT.ipynb` | Etiquetado inicial del dataset mediante inferencia externa *(preparación de datos, no parte del modelo final)* |
-| 1 | `1_Sobremuestreo.ipynb` | Balanceo del conjunto de entrenamiento con SMOTE |
-| 1b | `1_Sobremuestreo_ROS.ipynb` | Balanceo alternativo con Random Over-Sampling |
-| 2 | `2_Modelos_Tradicionales_editado.ipynb` | Entrenamiento y evaluación de SVM, Regresión Logística y Naive Bayes |
-| 3 | `3_Modelo_LSTM.ipynb` | Red neuronal LSTM con embeddings de texto clínico |
-| 4 | `4_Submuestreo.ipynb` | Experimento de balanceo con submuestreo aleatorio |
-| 5 | `5_Modelo_XGBoost.ipynb` | Clasificador XGBoost con datos aumentados por LLM |
-| 6 | `6_Comparacion_SVM_LSTM_XGBoost.ipynb` | Comparación final de modelos y selección del mejor |
-| 7 | `7_Modelo_RoBERTa.ipynb` | Fine-tuning de DistilBERT y RoBERTa-BNE *(requiere GPU)* |
+| 0.1 | `0.1_Inferencia_RAD_ALERT.ipynb` | Filtro de casos críticos mediante inferencia externa (Triaje) |
+| 1 | `1_Modelos_Tradicionales_Baseline.ipynb` | Entrenamiento y evaluación de Baseline sobre datos desbalanceados |
+| 2 | `2_Submuestreo_Exploracion.ipynb` | Exploración de balanceo mediante submuestreo aleatorio |
+| 3 | `3_Modelo_LSTM_Baseline.ipynb` | Red neuronal LSTM entrenada como Baseline inicial |
+| 4.0 | `4.0_Balanceo_SMOTE_ROS.ipynb` | Solución 1 al desbalance: Oversampling clásico (SMOTE y ROS) |
+| 4.1 | `4.1_Augmentation_LLM.ipynb` | Solución 2 (Estado del Arte): Generación de datos sintéticos con LLM (Claude API) |
+| 5 | `5_Modelo_XGBoost_Balanceado.ipynb` | Clasificador XGBoost evaluado sobre los datos aumentados |
+| 6 | `6_Comparacion_Final.ipynb` | Comparación de métricas de todos los modelos y selección del mejor |
+| 7 | `7_Modelo_RoBERTa.ipynb` | Fine-tuning de arquitecturas tipo Transformer *(requiere GPU)* |
 
 ---
 
@@ -87,18 +87,19 @@ jupyter notebook
 
 ```
 PDG-Diagnostico-Clinico/
+├── .env.example
 ├── requirements.txt
 ├── README.md
 └── notebooks/
     ├── 0.0_Analisis_y_Transformacion.ipynb
     ├── 0.1_Inferencia_RAD_ALERT.ipynb
-    ├── 1_Sobremuestreo.ipynb
-    ├── 1_Sobremuestreo_ROS.ipynb
-    ├── 2_Modelos_Tradicionales_editado.ipynb
-    ├── 3_Modelo_LSTM.ipynb
-    ├── 4_Submuestreo.ipynb
-    ├── 5_Modelo_XGBoost.ipynb
-    ├── 6_Comparacion_SVM_LSTM_XGBoost.ipynb
+    ├── 1_Modelos_Tradicionales_Baseline.ipynb
+    ├── 2_Submuestreo_Exploracion.ipynb
+    ├── 3_Modelo_LSTM_Baseline.ipynb
+    ├── 4.0_Balanceo_SMOTE_ROS.ipynb
+    ├── 4.1_Augmentation_LLM.ipynb
+    ├── 5_Modelo_XGBoost_Balanceado.ipynb
+    ├── 6_Comparacion_Final.ipynb
     └── 7_Modelo_RoBERTa.ipynb
 ```
 
