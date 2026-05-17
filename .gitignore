@@ -225,14 +225,3 @@ __marimo__/
 
 # Modelos entrenados (binarios grandes - usar Git LFS si se necesitan)
 models/
-
-# Requirements de otros proyectos (no pertenece a este repo)
-requirements2.txt
-
-# Scripts temporales de limpieza
-scan_notebooks.py
-clean_notebooks.py
-clean_isabella.py
-fix_inference.py
-fix_isabella_final.py
-fix_cell5.py
