@@ -35,13 +35,12 @@ Ejecutar en orden. Cada notebook es independiente y carga su propio estado desde
 | 0.0 | `0.0_Analisis_y_Transformacion.ipynb` | Exploración, limpieza y normalización del dataset de informes clínicos |
 | 0.1 | `0.1_Inferencia_RAD_ALERT.ipynb` | Filtro de casos críticos mediante inferencia externa (Triaje) |
 | 1 | `1_Modelos_Tradicionales_Baseline.ipynb` | Entrenamiento y evaluación de Baseline sobre datos desbalanceados |
-| 2 | `2_Submuestreo_Exploracion.ipynb` | Exploración de balanceo mediante submuestreo aleatorio |
-| 3 | `3_Modelo_LSTM_Baseline.ipynb` | Red neuronal LSTM entrenada como Baseline inicial |
-| 4.0 | `4.0_Balanceo_SMOTE_ROS.ipynb` | Solución 1 al desbalance: Oversampling clásico (SMOTE y ROS) |
-| 4.1 | `4.1_Augmentation_LLM.ipynb` | Solución 2 (Estado del Arte): Generación de datos sintéticos con LLM (Claude API) |
-| 5 | `5_Modelo_XGBoost_Balanceado.ipynb` | Clasificador XGBoost evaluado sobre los datos aumentados |
-| 6 | `6_Comparacion_Final.ipynb` | Comparación de métricas de todos los modelos y selección del mejor |
-| 7 | `7_Modelo_RoBERTa.ipynb` | Fine-tuning de arquitecturas tipo Transformer *(requiere GPU)* |
+| 2 | `2_Modelo_LSTM_Baseline.ipynb` | Red neuronal LSTM entrenada como Baseline inicial |
+| 3.0 | `3.0_Balanceo_SMOTE_ROS.ipynb` | Solución 1 al desbalance: Oversampling clásico (SMOTE y ROS) |
+| 3.1 | `3.1_Augmentation_LLM.ipynb` | Solución 2 (Estado del Arte): Generación de datos sintéticos con LLM (Claude API) |
+| 4 | `4_Modelo_XGBoost_Balanceado.ipynb` | Clasificador XGBoost evaluado sobre los datos aumentados |
+| 5 | `5_Comparacion_Final.ipynb` | Comparación de métricas de todos los modelos y selección del mejor |
+| 6 | `6_Modelo_Transformers.ipynb` | Fine-tuning de arquitecturas tipo Transformer *(requiere GPU)* |
 
 ---
 
@@ -94,13 +93,12 @@ PDG-Diagnostico-Clinico/
     ├── 0.0_Analisis_y_Transformacion.ipynb
     ├── 0.1_Inferencia_RAD_ALERT.ipynb
     ├── 1_Modelos_Tradicionales_Baseline.ipynb
-    ├── 2_Submuestreo_Exploracion.ipynb
-    ├── 3_Modelo_LSTM_Baseline.ipynb
-    ├── 4.0_Balanceo_SMOTE_ROS.ipynb
-    ├── 4.1_Augmentation_LLM.ipynb
-    ├── 5_Modelo_XGBoost_Balanceado.ipynb
-    ├── 6_Comparacion_Final.ipynb
-    └── 7_Modelo_RoBERTa.ipynb
+    ├── 2_Modelo_LSTM_Baseline.ipynb
+    ├── 3.0_Balanceo_SMOTE_ROS.ipynb
+    ├── 3.1_Augmentation_LLM.ipynb
+    ├── 4_Modelo_XGBoost_Balanceado.ipynb
+    ├── 5_Comparacion_Final.ipynb
+    └── 6_Modelo_Transformers.ipynb
 ```
 
 ---
