@@ -225,3 +225,5 @@ __marimo__/
 
 # Modelos entrenados (binarios grandes - usar Git LFS si se necesitan)
 models/
+
+.idea/
